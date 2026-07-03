@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fix & Translate to Hindi | ठीक करें और अनुवाद करें</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap');
+  :root{
+    --bg:#cdbfa3; --card:#fffdf6; --text:#2b2b2b; --muted:#7a6f5c;
+    --primary:#3b5bdb; --primary-d:#364fc7; --accent:#e8590c;
+    --hindi:#c0392b; --en:#1b3a6b; --border:#e2d8c0; --shadow:0 10px 30px rgba(0,0,0,.18);
+    --chip:#fff3d6; --ok:#2f9e44; --warn:#e8590c; --err:#c0392b;
+    --paper:#fffdf6; --line:#bcd6ef; --margin-red:#e06666; --pencil:#8a7d66;
+    --hand:'Patrick Hand','Comic Sans MS',cursive; --title:'Caveat','Segoe Script',cursive;
+  }
+  [data-theme="dark"]{
+    --bg:#171a1f; --card:#21262e; --text:#e7e3d8; --muted:#9b9384;
+    --primary:#748ffc; --primary-d:#5c7cfa; --accent:#ffa94d;
+    --hindi:#ff8787; --en:#a5c8ff; --border:#39404a; --shadow:0 10px 30px rgba(0,0,0,.5);
+    --chip:#2c2417; --ok:#69db7c; --warn:#ffa94d; --err:#ff8787;
+    --paper:#21262e; --line:#33414e; --margin-red:#a3565a; --pencil:#9b9384;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans',Roboto,sans-serif;
+    background:var(--bg);
+    background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1px);
+    background-size:18px 18px;
+    color:var(--text); line-height:1.6; transition:background .3s,color .3s; padding-bottom:60px;
+  }
+  .hindi{font-family:'Noto Sans Devanagari','Mangal','Segoe UI',sans-serif}
+
+  header{
+    background:linear-gradient(135deg,#5c3aa8,#3d2472); color:#fff;
+    padding:30px 16px 26px; text-align:center; box-shadow:var(--shadow);
+    border-bottom:6px solid #c79a3a; position:relative;
+  }
+  header h1{font-family:var(--title); font-size:2.3rem; font-weight:700; text-shadow:1px 2px 0 rgba(0,0,0,.25)}
+  header p{opacity:.95; margin-top:2px; font-size:1rem}
+  header .label-sticker{
+    display:inline-block; margin-top:12px; background:#fffdf6; color:#2b2b2b;
+    padding:5px 22px; border-radius:4px; font-family:var(--hand); font-size:1.05rem;
+    box-shadow:0 3px 8px rgba(0,0,0,.3); transform:rotate(-1.5deg); border:1px solid #d9cdb0;
+  }
+  .top-controls{position:absolute; top:14px; right:14px; display:flex; gap:8px}
+  .icon-btn{
+    background:rgba(255,255,255,.2); border:none; color:#fff; cursor:pointer;
+    width:42px; height:42px; border-radius:12px; font-size:1.2rem;
+    display:grid; place-items:center; transition:transform .15s,background .2s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.35); transform:translateY(-2px)}
+
+  .container{max-width:760px; margin:0 auto; padding:16px}
+
+  .page-nav{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+  .nav-link{
+    display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+    font-family:var(--hand); font-size:1.05rem; color:var(--primary);
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:7px 14px; box-shadow:0 2px 6px rgba(0,0,0,.08); transition:transform .15s;
+  }
+  .nav-link:hover{transform:translateY(-2px)}
+  .nav-link.active{background:var(--primary); color:#fff; border-color:var(--primary); cursor:default; transform:none}
+
+  .status{
+    margin:14px 0; padding:10px 14px; border-radius:10px; font-size:.92rem;
+    border:1px solid var(--border); background:var(--card); box-shadow:0 2px 6px rgba(0,0,0,.08);
+    display:flex; align-items:center; gap:8px;
+  }
+  .status.ok{border-color:var(--ok); color:var(--ok)}
+  .status.warn{border-color:var(--warn); color:var(--warn)}
+  .status.err{border-color:var(--err); color:var(--err)}
+  .status .dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:0 0 auto}
+  .status .bar{flex:1; height:6px; border-radius:4px; background:var(--border); overflow:hidden; display:none}
+  .status .bar>i{display:block;height:100%;width:0;background:var(--ok);transition:width .2s}
+
+  .card{
+    background:var(--paper); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); padding:16px; margin-bottom:16px; position:relative;
+    background-image:repeating-linear-gradient(transparent,transparent 33px,var(--line) 33px,var(--line) 34px);
+    background-position:0 46px;
+  }
+  .card h2{font-family:var(--hand); font-size:1.2rem; color:var(--primary-d); margin-bottom:10px;
+    display:flex; align-items:center; gap:8px}
+  textarea{
+    width:100%; min-height:110px; resize:vertical; border:2px dashed var(--pencil);
+    border-radius:10px; padding:12px; font-size:1.05rem; font-family:inherit;
+    background:transparent; color:var(--text); line-height:34px;
+  }
+  textarea:focus{outline:none; border-color:var(--primary)}
+  textarea::placeholder{color:var(--muted)}
+
+  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center}
+  .btn{
+    font-family:var(--hand); font-size:1.1rem; cursor:pointer; border:none;
+    padding:10px 22px; border-radius:10px; color:#fff; background:var(--primary);
+    box-shadow:0 4px 0 var(--primary-d); transition:transform .1s, box-shadow .1s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--primary-d)}
+  .btn[disabled]{opacity:.55; cursor:not-allowed; transform:none; box-shadow:0 4px 0 var(--primary-d)}
+  .btn.ghost{background:var(--chip); color:var(--text); box-shadow:0 4px 0 var(--border)}
+  .hint{color:var(--muted); font-size:.85rem}
+
+  .out{display:none}
+  .out.show{display:block}
+  .lvl{position:relative}
+  .lvl-badge{display:inline-block; font-family:var(--hand); font-size:1rem; padding:3px 12px;
+    border-radius:8px 8px 8px 0; color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .lvl-badge.simple{background:#2f9e44}
+  .lvl-badge.medium{background:#e8590c}
+  .lvl-badge.advanced{background:#3b5bdb}
+  .lvl-sub{color:var(--muted); font-size:.85rem; font-style:italic; margin:2px 0 8px}
+  .src{font-size:.8rem;color:var(--muted);font-weight:400}
+  .copy{padding:1px 8px}
+  .out .row{margin-bottom:12px}
+  .out .lbl{font-family:var(--hand); font-size:1rem; color:var(--muted); display:flex; align-items:center; gap:6px; margin-bottom:4px}
+  .out .val{font-size:1.15rem; padding:8px 6px}
+  .out .val.en{color:var(--en); font-weight:600}
+  .out .val.hi{color:var(--hindi); font-weight:600}
+  .copy{
+    margin-left:auto; font-family:var(--hand); font-size:.85rem; cursor:pointer;
+    background:transparent; border:1px solid var(--border); border-radius:8px;
+    padding:2px 10px; color:var(--muted);
+  }
+  .copy:hover{color:var(--primary); border-color:var(--primary)}
+  .diff-ins{background:rgba(47,158,68,.18); border-radius:3px; padding:0 2px}
+  .diff-del{color:var(--muted); text-decoration:line-through; opacity:.7; margin:0 2px}
+
+  details.help{margin-top:8px; font-size:.9rem; color:var(--muted)}
+  details.help summary{cursor:pointer; font-family:var(--hand); color:var(--primary)}
+  details.help code{background:var(--chip); padding:1px 6px; border-radius:4px; font-family:monospace}
+  details.help ol{margin:8px 0 0 20px; line-height:1.8}
+  .footer{text-align:center; color:var(--muted); font-size:.82rem; margin-top:10px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top-controls">
+    <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+  </div>
+  <h1>✍️ Fix &amp; Translate</h1>
+  <p class="hindi">रफ़ अंग्रेज़ी लिखें → सही अंग्रेज़ी + हिंदी</p>
+  <span class="label-sticker">type rough English • get correct English + Hindi</span>
+</header>
+
+<div class="container">
+
+  <nav class="page-nav">
+    <a class="nav-link" href="english-tenses-hindi.html">📚 Tenses</a>
+    <a class="nav-link" href="meeting-sentences.html">💼 Meeting English</a>
+    <span class="nav-link active">✍️ Fix &amp; Translate</span>
+  </nav>
+
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">Checking your browser…</span><span class="bar" id="bar"><i></i></span></div>
+
+  <div class="card">
+    <h2>📝 Your rough sentence</h2>
+    <textarea id="input" placeholder="e.g.  i want latest ipa bcz on old we din't get this popup"></textarea>
+    <div class="actions">
+      <button class="btn" id="goBtn">✨ Fix &amp; Translate</button>
+      <button class="btn ghost" id="sampleBtn">Try a sample</button>
+      <button class="btn ghost" id="clearBtn">Clear</button>
+    </div>
+    <div class="hint" style="margin-top:8px">Fix runs offline. Hindi runs offline via Chrome built-in AI when available, otherwise falls back to a free online translator. Terms like <b>IPA</b>, <b>API</b>, <b>APK</b>, <b>UI</b> are preserved.</div>
+  </div>
+
+  <div class="out" id="out">
+    <div class="status warn" id="levelNote" style="display:none">ℹ️ These levels were built by offline word-rules (Chrome's Prompt API isn't enabled). They differ, but for smoother AI rewrites enable the Prompt API — see help below.</div>
+    <div class="card lvl" data-lvl="simple">
+      <span class="lvl-badge simple">🟢 Simple</span>
+      <div class="lvl-sub">easy, everyday words</div>
+      <div class="lbl">✅ English <button class="copy" data-copy="en-simple">📋</button></div>
+      <div class="val en" id="en-simple"></div>
+      <div class="lbl">🇮🇳 Hindi <span class="src" id="src-simple"></span> <button class="copy" data-copy="hi-simple">📋</button></div>
+      <div class="val hi hindi" id="hi-simple"></div>
+    </div>
+    <div class="card lvl" data-lvl="medium">
+      <span class="lvl-badge medium">🟡 Medium</span>
+      <div class="lvl-sub">natural, clear English</div>
+      <div class="lbl">✅ English <button class="copy" data-copy="en-medium">📋</button></div>
+      <div class="val en" id="en-medium"></div>
+      <div class="lbl" style="margin-top:2px">🔍 what changed vs. your text</div>
+      <div class="val" id="diffText" style="font-size:1rem"></div>
+      <div class="lbl">🇮🇳 Hindi <span class="src" id="src-medium"></span> <button class="copy" data-copy="hi-medium">📋</button></div>
+      <div class="val hi hindi" id="hi-medium"></div>
+    </div>
+    <div class="card lvl" data-lvl="advanced">
+      <span class="lvl-badge advanced">🔵 Advanced</span>
+      <div class="lvl-sub">polished, formal / professional</div>
+      <div class="lbl">✅ English <button class="copy" data-copy="en-advanced">📋</button></div>
+      <div class="val en" id="en-advanced"></div>
+      <div class="lbl">🇮🇳 Hindi <span class="src" id="src-advanced"></span> <button class="copy" data-copy="hi-advanced">📋</button></div>
+      <div class="val hi hindi" id="hi-advanced"></div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--card);background-image:none">
+    <h2>⚙️ Offline setup</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="dlBtn" style="font-size:1rem;padding:9px 18px">⬇️ Download offline models</button>
+      <span class="hint" id="dlHint" style="margin:0">One click fetches the on-device models. The <code style="background:var(--chip);padding:0 4px;border-radius:3px">chrome://flags</code> toggles must be enabled once by hand — the browser won't let a page do that (steps below).</span>
+    </div>
+  </div>
+
+  <details class="help" open>
+    <summary>📥 How to add the offline models (one-time setup)</summary>
+    <div>
+      This tool uses Chrome's on-device AI so everything runs offline. You need <b>Chrome 138+</b> (or recent <b>Edge</b>). Do this once:
+      <ol>
+        <li>In the address bar open <code>chrome://flags</code>. Search each flag below and set it to <b>Enabled</b>:
+          <ul style="margin:6px 0 6px 18px;line-height:1.8">
+            <li><b>Prompt API for Gemini Nano</b> → the Simple / Medium / Advanced rewrites.<br><span style="color:var(--muted)"><code>chrome://flags/#prompt-api-for-gemini-nano</code></span></li>
+            <li><b>Translator API</b> → English → Hindi, fully offline.<br><span style="color:var(--muted)"><code>chrome://flags/#translation-api</code></span></li>
+            <li><b>Proofreader API for Small Expert Model</b> → offline grammar fix.<br><span style="color:var(--muted)"><code>chrome://flags/#proofreader-api</code></span></li>
+          </ul>
+        </li>
+        <li>Click <b>Relaunch</b> (bottom of the flags page) to restart Chrome.</li>
+        <li>Come back here and press the <b>⬇️ Download offline models</b> button just above these steps. First run downloads the small models (a few minutes) — watch progress in the status bar.</li>
+        <li>When the status bar shows <b>“run fully offline on-device ✅”</b>, you're done. It stays offline after that.</li>
+      </ol>
+      <div style="color:var(--muted);margin-top:6px">Tip: you can also watch model downloads at <code>chrome://components</code> → “Optimization Guide On Device Model”. Until setup is finished, the tool still works — English cleanup runs offline and Hindi falls back to a free online translator.</div>
+    </div>
+  </details>
+
+  <div class="footer">100% on-device · nothing is sent to any server</div>
+</div>
+
+<script>
+/* ---------------- THEME ---------------- */
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click',()=>{
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+  themeBtn.textContent = dark?'🌙':'☀️';
+});
+
+/* ---------------- STATUS HELPERS ---------------- */
+const statusEl=document.getElementById('status'), statusText=document.getElementById('statusText');
+const bar=document.getElementById('bar'), barFill=bar.querySelector('i');
+function setStatus(kind,msg){ statusEl.className='status '+kind; statusText.innerHTML=msg; }
+function showBar(p){ bar.style.display='block'; barFill.style.width=Math.round(p*100)+'%'; }
+function hideBar(){ bar.style.display='none'; }
+
+/* ---------------- OFFLINE RULE-BASED CLEANUP ----------------
+   Runs everywhere, no AI needed. Expands common chat shorthand and
+   fixes obvious typos, so the AI (or the fallback) starts from cleaner text. */
+const SHORT = {
+  "bcz":"because","bcoz":"because","coz":"because","cuz":"because","b/c":"because",
+  "din't":"didn't","dint":"didn't","didnt":"didn't","dont":"don't","doesnt":"doesn't",
+  "wasnt":"wasn't","werent":"weren't","isnt":"isn't","arent":"aren't","cant":"can't",
+  "wont":"won't","couldnt":"couldn't","shouldnt":"shouldn't","wouldnt":"wouldn't",
+  "havent":"haven't","hasnt":"hasn't","hadnt":"hadn't","im":"I'm","ive":"I've",
+  "u":"you","ur":"your","r":"are","n":"and","pls":"please","plz":"please","plez":"please",
+  "thx":"thanks","tks":"thanks","ty":"thank you","abt":"about","abd":"and","nd":"and",
+  "bt":"but","wid":"with","w/":"with","w/o":"without","bcs":"because","tmrw":"tomorrow",
+  "tmr":"tomorrow","tdy":"today","msg":"message","pic":"picture","info":"information",
+  "asap":"as soon as possible","fyi":"for your information","btw":"by the way",
+  "sytext":"syntax","synax":"syntax","recieve":"receive","seperate":"separate",
+  "occured":"occurred","untill":"until","alot":"a lot","teh":"the","becoz":"because"
+};
+// terms we never lowercase / never translate away
+const KEEP_UPPER = ["ipa","api","apk","ui","ux","url","id","ok","qa","sdk","http","https","json","css","html","sql","ios","pdf","otp","kyc"];
+
+function ruleClean(raw){
+  let s = raw.replace(/\s+/g,' ').trim();
+  // token-wise shorthand expansion (preserve trailing punctuation)
+  s = s.split(' ').map(tok=>{
+    const m = tok.match(/^([^\wÀ-ÿ']*)([\wÀ-ÿ'\/]*)([^\wÀ-ÿ']*)$/);
+    if(!m) return tok;
+    const [,pre,word,post]=m;
+    const low=word.toLowerCase();
+    if(KEEP_UPPER.includes(low)) return pre+low.toUpperCase()+post;
+    if(SHORT[low]!==undefined){
+      let rep=SHORT[low];
+      if(word[0]===word[0]?.toUpperCase() && /[a-z]/i.test(word[0])) rep=rep[0].toUpperCase()+rep.slice(1);
+      return pre+rep+post;
+    }
+    return pre+word+post;
+  }).join(' ');
+  // standalone "i" -> "I"
+  s = s.replace(/\bi\b/g,'I');
+  // capitalize first letter of each sentence
+  s = s.replace(/(^\s*|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+  // ensure terminal punctuation
+  if(s && !/[.!?…]$/.test(s)) s += '.';
+  return s;
+}
+
+/* ---------------- WORD DIFF (correction highlight) ---------------- */
+function wordDiff(a,b){
+  const A=a.split(/\s+/), B=b.split(/\s+/);
+  const n=A.length,m=B.length, dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)
+    dp[i][j]=A[i-1].toLowerCase()===B[j-1].toLowerCase()?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  let i=n,j=m,out=[];
+  while(i>0&&j>0){
+    if(A[i-1].toLowerCase()===B[j-1].toLowerCase()){out.unshift({t:'same',w:B[j-1]});i--;j--;}
+    else if(dp[i-1][j]>=dp[i][j-1]){out.unshift({t:'del',w:A[i-1]});i--;}
+    else{out.unshift({t:'ins',w:B[j-1]});j--;}
+  }
+  while(i>0){out.unshift({t:'del',w:A[--i]});}
+  while(j>0){out.unshift({t:'ins',w:B[--j]});}
+  const esc=x=>x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let changed=false;
+  const html=out.map(o=>{
+    if(o.t==='same')return esc(o.w);
+    changed=true;
+    return o.t==='ins'?`<span class="diff-ins">${esc(o.w)}</span>`:`<span class="diff-del">${esc(o.w)}</span>`;
+  }).join(' ');
+  return changed?html:'<span style="color:var(--muted)">no changes needed 👍</span>';
+}
+
+/* ---------------- CHROME BUILT-IN AI ---------------- */
+let proofreader=null, translator=null, lm=null, aiReady={proof:false,trans:false,lm:false};
+
+function makeMonitor(label){
+  return { monitor(m){ m.addEventListener('downloadprogress',e=>{ showBar(e.loaded||0); setStatus('warn',`Downloading ${label} model… ${Math.round((e.loaded||0)*100)}%`); }); } };
+}
+
+async function loadModels(){
+  const missing=[]; // flags not enabled (API object absent)
+
+  // Translator (en -> hi)
+  try{
+    if('Translator' in self){
+      const av=await Translator.availability({sourceLanguage:'en',targetLanguage:'hi'});
+      if(av!=='unavailable'){
+        translator=await Translator.create(Object.assign({sourceLanguage:'en',targetLanguage:'hi'},makeMonitor('Hindi translator')));
+        aiReady.trans=true;
+      }
+    } else missing.push('Translator API');
+  }catch(e){ console.warn('Translator init failed',e); }
+
+  // Proofreader (grammar/spelling)
+  try{
+    if('Proofreader' in self){
+      const av=await Proofreader.availability();
+      if(av!=='unavailable'){
+        proofreader=await Proofreader.create(Object.assign({includeCorrectionTypes:false,expectedInputLanguages:['en']},makeMonitor('proofreader')));
+        aiReady.proof=true;
+      }
+    } else missing.push('Proofreader API');
+  }catch(e){ console.warn('Proofreader init failed',e); }
+
+  // LanguageModel (Prompt API)
+  try{
+    if('LanguageModel' in self){
+      const av=await LanguageModel.availability();
+      if(av!=='unavailable'){
+        lm=await LanguageModel.create(makeMonitor('language'));
+        aiReady.lm=true;
+      }
+    } else missing.push('Prompt API (Gemini Nano)');
+  }catch(e){ console.warn('LanguageModel init failed',e); }
+
+  hideBar();
+  return missing;
+}
+
+async function initAI(){
+  const missing=await loadModels();
+  const canHiOffline = aiReady.trans||aiReady.lm;
+  const canStyles = aiReady.lm;
+  let msg, kind;
+  if(canHiOffline && canStyles){ msg='Ready — 3 style levels + Hindi run fully offline on-device. ✅'; kind='ok'; }
+  else if(canHiOffline){ msg='Hindi runs offline. Style variants need the Prompt API — enable it and press “Download offline models”.'; kind='ok'; }
+  else if(canStyles){ msg='Style variants run offline; Hindi uses the free online translator (needs internet).'; kind='ok'; }
+  else { kind='warn'; msg = missing.length
+      ? 'Offline AI not active yet. Missing (enable in chrome://flags, then click “Download offline models”): '+missing.join(', ')+'.'
+      : 'On-device models are still downloading. Click “Download offline models” to fetch them.'; }
+  setStatus(kind, msg);
+  updateDlBtn();
+}
+
+function updateDlBtn(){
+  const allReady = aiReady.trans && aiReady.lm;
+  if(allReady){ dlBtn.textContent='✅ Offline models ready'; dlBtn.disabled=true; }
+}
+
+async function downloadModels(){
+  dlBtn.disabled=true; const t=dlBtn.textContent; dlBtn.innerHTML='<span class="spin"></span> downloading…';
+  setStatus('warn','Fetching on-device models… this can take a few minutes on first run.');
+  try{
+    const missing=await loadModels();
+    const canHiOffline=aiReady.trans||aiReady.lm, canStyles=aiReady.lm;
+    if(canHiOffline&&canStyles) setStatus('ok','Done — everything now runs offline on-device. ✅');
+    else if(missing.length) setStatus('warn','Some models still need their flag enabled in chrome://flags: '+missing.join(', ')+'. Enable, restart Chrome, then click again.');
+    else setStatus('warn','Models are still downloading in the background. Wait a moment and click again, or check chrome://components.');
+  }catch(e){ setStatus('err','Download attempt failed: '+e.message); }
+  finally{ dlBtn.disabled=false; dlBtn.textContent=t; updateDlBtn(); }
+}
+
+async function aiCorrect(text){
+  if(aiReady.proof){
+    try{
+      const r=await proofreader.proofread(text);
+      return (r&&(r.correctedInput||r.corrected||r.correction))||text;
+    }catch(e){ console.warn('proofread failed',e); }
+  }
+  if(aiReady.lm){
+    try{
+      const p=`Correct the grammar, spelling and punctuation of the sentence below. Keep the meaning and keep technical terms (IPA, API, APK, UI) unchanged. Reply with ONLY the corrected sentence, nothing else.\n\nSentence: ${text}`;
+      const out=await lm.prompt(p);
+      return out.trim().replace(/^["']|["']$/g,'');
+    }catch(e){ console.warn('lm correct failed',e); }
+  }
+  const lt=await languageToolCorrect(text); // online grammar fix
+  if(lt) return lt;
+  return text; // rule-cleaned already
+}
+
+/* ---------------- OFFLINE HEURISTIC REWRITER (no AI needed) ----------------
+   Not as smart as the Prompt API, but makes the three levels visibly different. */
+const CONTRACTIONS={ "didn't":"did not","doesn't":"does not","don't":"do not","won't":"will not","can't":"cannot","couldn't":"could not","shouldn't":"should not","wouldn't":"would not","isn't":"is not","aren't":"are not","wasn't":"was not","weren't":"were not","haven't":"have not","hasn't":"has not","hadn't":"had not","it's":"it is","that's":"that is","there's":"there is","i'm":"I am","we're":"we are","they're":"they are","you're":"you are","i've":"I have","we've":"we have" };
+const FORMAL={ want:"require", wants:"requires", get:"receive", got:"received", gets:"receives", getting:"receiving", latest:"most recent", newest:"most recent", popup:"pop-up", show:"display", shows:"displays", showing:"displaying", fix:"resolve", fixed:"resolved", buy:"purchase", help:"assist", ask:"request", tell:"inform", check:"verify", start:"begin", but:"however", so:"therefore", also:"additionally", big:"significant", need:"require", "old":"earlier" };
+const SIMPLE={ require:"need", requires:"needs", receive:"get", purchase:"buy", assist:"help", resolve:"fix", additionally:"also", however:"but", therefore:"so", utilize:"use", verify:"check", obtain:"get", encounter:"get", previous:"old", commence:"start", approximately:"about" };
+
+function applyWordMap(s,map){
+  return s.replace(/\b[\w']+\b/g, w=>{
+    const low=w.toLowerCase();
+    if(KEEP_UPPER.includes(low)) return w;
+    if(map[low]!==undefined){ const r=map[low]; return /^[A-Z]/.test(w)? r.charAt(0).toUpperCase()+r.slice(1): r; }
+    return w;
+  });
+}
+function ensureArticleLatest(s){
+  return s.replace(/\b(want|wants|need|needs|require|requires|download|install|get|use)\s+(the\s+)?(latest|most recent|newest)\b/ig,
+    (m,v,the,x)=> v+' the '+x);
+}
+function capFirst(s){ return s.replace(/^\s*([a-z])/,(m,c)=>c.toUpperCase()); }
+
+function heuristicLevels(base){
+  let medium=ensureArticleLatest(base).replace(/\bon old\b/ig,'in the old version');
+
+  let simple=applyWordMap(medium,SIMPLE).replace(/\bin the old version\b/ig,'in the old one');
+
+  let adv=medium.replace(/\b[\w']+\b/g, w=>{
+    const l=w.toLowerCase();
+    if(CONTRACTIONS[l]!==undefined){ const r=CONTRACTIONS[l]; return /^[A-Z]/.test(w)? r.charAt(0).toUpperCase()+r.slice(1): r; }
+    return w;
+  });
+  adv=applyWordMap(adv,FORMAL).replace(/\bin the old version\b/ig,'in the previous version');
+  adv=ensureArticleLatest(adv);
+
+  return {simple:capFirst(simple), medium:capFirst(medium), advanced:capFirst(adv)};
+}
+
+async function languageToolCorrect(text){
+  // Free, no-key online grammar/spell fix. Improves the base sentence when built-in AI is off.
+  try{
+    const body=new URLSearchParams({text, language:'en-US'});
+    const r=await fetch('https://api.languagetool.org/v2/check',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+    if(!r.ok) return null;
+    const j=await r.json();
+    let s=text;
+    const ms=(j.matches||[]).filter(m=>m.replacements&&m.replacements.length).sort((a,b)=>b.offset-a.offset);
+    for(const m of ms){ s=s.slice(0,m.offset)+m.replacements[0].value+s.slice(m.offset+m.length); }
+    return s;
+  }catch(e){ console.warn('LanguageTool failed',e); return null; }
+}
+
+async function aiRewriteLevels(base){
+  // Returns {simple, medium, advanced} or null if generative AI is unavailable.
+  if(!aiReady.lm) return null;
+  try{
+    const p=`You are an English writing helper. Rewrite the sentence below in THREE styles and reply with ONLY strict minified JSON, no extra words, in this exact shape:
+{"simple":"...","medium":"...","advanced":"..."}
+Rules: keep the original meaning; keep technical terms (IPA, API, APK, UI) unchanged.
+- "simple": very easy everyday words, short and clear (for a beginner).
+- "medium": natural, correct, conversational English.
+- "advanced": polished, formal, professional English.
+Sentence: ${base}`;
+    let out=(await lm.prompt(p)).trim();
+    out=out.replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+    const m=out.match(/\{[\s\S]*\}/);
+    if(m) out=m[0];
+    const o=JSON.parse(out);
+    if(o.simple&&o.medium&&o.advanced)
+      return {simple:String(o.simple).trim(), medium:String(o.medium).trim(), advanced:String(o.advanced).trim()};
+  }catch(e){ console.warn('rewrite levels failed',e); }
+  return null;
+}
+
+async function onlineTranslate(text){
+  // Free, no-key fallback. Runs only in the user's browser (needs internet).
+  try{
+    const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=en|hi';
+    const r=await fetch(url);
+    if(!r.ok) return null;
+    const j=await r.json();
+    const t=j&&j.responseData&&j.responseData.translatedText;
+    return (t&&!/^MYMEMORY WARNING/i.test(t))?t:null;
+  }catch(e){ console.warn('online translate failed',e); return null; }
+}
+
+async function aiTranslate(text){
+  if(aiReady.trans){
+    try{ return {hi:await translator.translate(text),src:'on-device'}; }catch(e){ console.warn('translate failed',e); }
+  }
+  if(aiReady.lm){
+    try{
+      const out=await lm.prompt(`Translate the following English sentence into natural Hindi (Devanagari). Keep technical terms like IPA/API/APK in English. Reply with ONLY the Hindi translation.\n\n${text}`);
+      return {hi:out.trim(),src:'on-device'};
+    }catch(e){ console.warn('lm translate failed',e); }
+  }
+  const online=await onlineTranslate(text);
+  if(online) return {hi:online,src:'online'};
+  return null;
+}
+
+/* ---------------- MAIN ---------------- */
+const input=document.getElementById('input'), out=document.getElementById('out');
+const diffText=document.getElementById('diffText'), levelNote=document.getElementById('levelNote');
+const goBtn=document.getElementById('goBtn'), dlBtn=document.getElementById('dlBtn');
+const LEVELS=['simple','medium','advanced'];
+dlBtn.addEventListener('click',downloadModels);
+
+async function run(){
+  const raw=input.value.trim();
+  if(!raw){ input.focus(); return; }
+  goBtn.disabled=true; const orig=goBtn.textContent; goBtn.innerHTML='<span class="spin"></span> working…';
+  try{
+    const cleaned=ruleClean(raw);
+    const base=(await aiCorrect(cleaned))||cleaned;
+
+    let levels=await aiRewriteLevels(base);
+    const heuristic=!levels;
+    if(heuristic) levels=heuristicLevels(base);
+    levelNote.style.display=heuristic?'block':'none';
+
+    LEVELS.forEach(lv=>{ document.getElementById('en-'+lv).textContent=levels[lv]; });
+    diffText.innerHTML=wordDiff(raw,levels.medium);
+    out.classList.add('show');
+    out.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+    // Hindi for each level (offline AI, else online). Show "…" while working.
+    for(const lv of LEVELS){
+      const hiEl=document.getElementById('hi-'+lv), srcEl=document.getElementById('src-'+lv);
+      hiEl.textContent='…'; hiEl.style.opacity=.6; srcEl.textContent='';
+      const hi=await aiTranslate(levels[lv]);
+      if(hi){ hiEl.textContent=hi.hi; hiEl.style.opacity=1;
+        srcEl.textContent = hi.src==='online' ? '🌐 online' : '💻 offline'; }
+      else { hiEl.textContent='(Hindi unavailable — enable built-in AI or connect to internet.)'; hiEl.style.opacity=.7; }
+    }
+  }finally{
+    goBtn.disabled=false; goBtn.textContent=orig;
+  }
+}
+goBtn.addEventListener('click',run);
+input.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter') run(); });
+
+document.getElementById('sampleBtn').addEventListener('click',()=>{
+  input.value="i want latest ipa bcz on old we din't get this popup";
+  input.focus();
+});
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  input.value=''; out.classList.remove('show'); input.focus();
+});
+
+/* copy buttons */
+document.querySelectorAll('.copy').forEach(b=>{
+  b.addEventListener('click',async()=>{
+    const t=document.getElementById(b.dataset.copy).textContent;
+    try{ await navigator.clipboard.writeText(t); const o=b.textContent; b.textContent='✓ copied'; setTimeout(()=>b.textContent=o,1200);}catch(e){}
+  });
+});
+
+initAI();
+</script>
+</body>
+</html>
